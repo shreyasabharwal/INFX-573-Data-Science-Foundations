@@ -1,0 +1,124 @@
+---
+title: "Untitled"
+author: "Aditya Wakade"
+date: "21 February 2018"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading the data and marking incomes higher than 50,000
+```{r}
+data <- read.csv('census data.csv')
+data$income.g50 <-rep(0, nrow(data))
+data$income.g50[data$income==" >50K"] <-1
+```
+
+finding summary
+```{r}
+mod <-glm(income.g50 ~ education + age + sex + race,data=data[,!colnames(data)%in%"income"], family="binomial")
+summary(mod)
+```
+The exponent values for log values of masters dcotral prof-colg
+From the summary we can interpret that having a prof-school, doctrate, masters, bachelors degree gives higher odds of having a salary more than 50K. 
+At the same time, the odds of having a salary less than 50K increase for only preschool education. All these are the results having *** significance codes that is they are more reliable.
+
+Age significantly does not provide a lot of oddsin the salary, which tells us that it does not really play as a decider.
+
+Race value being white provides higher and more significant odds ratio of the salary being more than 50K.
+
+Sex being male also significantly affects the salary being more than 50K
+
+3. Exploring RelationshipsII:Plot age by the outcome and the observed predicted probabilities. Why are the predicted probabilities so variable?
+
+```{r}
+x <-data$age
+plot(data$income.g50~x, col="blue")
+fits <-fitted(mod)
+points(x, fits, pch = 4 , cex=0.3)
+abline(0.5, 0)
+```
+
+The predicted probabilities are so variable because age is not a good decider. People from all ages are account for salaries greater than 50K and go ahead to be more than 50K.
+
+
+4. Explore some cutoffs for the probabilities:Tabulate the outcome with a cutoff of 0.25, 0.5, and 0.75. Which has the lowest percent error?
+
+```{r}
+tab <-table(data$income.g50, fits>=0.5)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+
+```{r}
+tab <-table(data$income.g50, fits>=0.25)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+
+```{r}
+tab <-table(data$income.g50, fits>=0.75)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+Tab with 0.5 as cut off has the lowest percentage error.
+
+5. Examine this model.a. Plot the ROC curve and calculate the AUC for this model. 
+
+```{r}
+library(AUC)
+y <-factor(data$income.g50)
+rr <-roc(fits, y)
+plot(rr)
+auc(rr)
+```
+
+By plotting the true positives against the false positive we come to know that area under the curve is about 80% for this fitted model.
+
+
+6. Let's formulate another model. a.Fit a model with all covariates (except "income"!). Do you see the same patterns for level of schooling?
+
+```{r}
+mod1 <-glm(income.g50~., data=data[,!colnames(data)%in%c("income")], family="binomial")
+summary(mod1)
+```
+
+```{r}
+x1 <-data$age
+plot(data$income.g50~x1, col="blue")
+fits1 <-fitted(mod1)
+points(x1, fits1, pch = 4 , cex=0.3)
+abline(0.5, 0)
+```
+The probability values provided by the age variable are much less variable now. It clearly denotes how the probabilities of people between 35-55 are more for having a higherincome than 50K.
+ 
+c.Calculate thepercent error as before for cutoffs 0.25, 0.5, 0.75. Which cutoff has the lowest percent error? Does this model perform better than the other model?
+
+```{r}
+tab <-table(data$income.g50, fits1>=0.5)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+
+```{r}
+tab <-table(data$income.g50, fits1>=0.25)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+
+```{r}
+tab <-table(data$income.g50, fits1>=0.75)
+(tab[1,2]+tab[2,1])/sum(tab)
+```
+
+The error is least for 0.5 and much less than the previous model.
+
+d. Plot the ROC and calculate the AUC. Again, does this model outperform the other model?
+
+```{r}
+y <-factor(data$income.g50)
+rr <-roc(fits1, y)
+plot(rr)
+auc(rr)
+```
+
+AUC IS 0.889 which is much better than the previous model
